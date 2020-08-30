@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/jamestjw/coup-vin/auth"
+	"github.com/jamestjw/coup-vin/middlewares"
 	"github.com/jamestjw/coup-vin/models"
 )
 
@@ -13,31 +16,42 @@ func main() {
 	r := mux.NewRouter()
 
 	r.Handle("/", http.FileServer(http.Dir("./views/")))
-	r.Handle("/heartbeat", heartbeatHandler).Methods("GET")
-	r.Handle("/rooms", roomsHandler).Methods("GET")
-	r.Handle("/rooms/{id}/messages", addMessageHandler).Methods("POST")
 
+	// Heartbeat API
+	r.HandleFunc("/heartbeat", heartbeatHandler).Methods("GET")
+
+	// Static content
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
+	authRouter := r.PathPrefix("/auth").Subrouter()
+	authRouter.HandleFunc("/signin", signinHandler).Methods("POST")
+	authRouter.HandleFunc("/refresh", refreshHandler).Methods("POST")
+
+	protectedRouter := r.PathPrefix("/").Subrouter()
+	protectedRouter.Use(auth.Middleware)
+	protectedRouter.HandleFunc("/rooms", roomsHandler).Methods("GET")
+	protectedRouter.HandleFunc("/rooms/{id}/messages", addMessageHandler).Methods("POST")
+
+	r.Use(middlewares.LoggingMiddleware)
 	http.ListenAndServe(":8080", r)
 }
 
 var notImplemented = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Not Implemented"))
+	fmt.Fprintln(w, "Not Implemented")
 })
 
-var heartbeatHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Je suis bien vivant!"))
-})
+var heartbeatHandler = func(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Je suis bien vivant!")
+}
 
-var roomsHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+var roomsHandler = func(w http.ResponseWriter, r *http.Request) {
 	payload, _ := json.Marshal(models.DefaultRooms)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(payload))
-})
+}
 
-var addMessageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+var addMessageHandler = func(w http.ResponseWriter, r *http.Request) {
 	// var message models.Message
 	var room models.Room
 	vars := mux.Vars(r)
@@ -61,4 +75,4 @@ var addMessageHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	} else {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
-})
+}
