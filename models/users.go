@@ -1,32 +1,61 @@
 package models
 
-import "fmt"
+import (
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+)
 
 type User struct {
+	gorm.Model
 	Password string
-	Username string
-	Name     string
-	ID       int
+	Username string `gorm:"uniqueIndex"`
 }
 
 var DefaultUsers = []User{
-	{Name: "John Doe", Username: "john_doe", Password: "notasecret", ID: 1},
+	{Username: "john_doe", Password: "notasecret"},
 }
 
-func FindUserByID(id int) (User, error) {
-	for _, user := range DefaultUsers {
-		if user.ID == id {
-			return user, nil
-		}
+func FindUserByID(id int) *User {
+	user := User{}
+	DB.First(&user, "id = ?", id)
+	if user == (User{}) {
+		return nil
 	}
-	return User{}, fmt.Errorf("user not found")
+	return &user
 }
 
-func FindUserByUsername(username string) (User, error) {
-	for _, user := range DefaultUsers {
-		if user.Username == username {
-			return user, nil
-		}
+func FindUserByUsername(username string) *User {
+	user := User{}
+	DB.First(&user, "username = ?", username)
+	if user == (User{}) {
+		return nil
 	}
-	return User{}, fmt.Errorf("user not found")
+	return &user
+}
+
+func UsernameExists(username string) (exists bool) {
+	user := FindUserByUsername(username)
+	return user != nil
+}
+
+func CreateUser(username string, password string) (*User, error) {
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
+		Username: username,
+		Password: string(encryptedPassword),
+	}
+
+	res := DB.Create(user)
+	err = res.Error
+	return user, err
+}
+
+func (u *User) MatchesPassword(p string) bool {
+	// Passwords match if there is no error
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(p)) == nil
 }

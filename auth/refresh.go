@@ -27,10 +27,10 @@ func RefreshToken(refreshToken string) (map[string]string, error) {
 			return nil, err
 		}
 
-		user, err := models.FindUserByID(id)
+		user := models.FindUserByID(id)
 
-		if err != nil {
-			return nil, err
+		if user == nil {
+			return nil, fmt.Errorf("refresh_token is invalid")
 		}
 		newTokenPair, err := GenerateTokenPair(user)
 

@@ -26,6 +26,7 @@ func main() {
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/signin", signinHandler).Methods("POST")
 	authRouter.HandleFunc("/refresh", refreshHandler).Methods("POST")
+	authRouter.HandleFunc("/signup", signupHandler).Methods("POST")
 
 	protectedRouter := r.PathPrefix("/").Subrouter()
 	protectedRouter.Use(auth.Middleware)
@@ -75,4 +76,9 @@ var addMessageHandler = func(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
+}
+
+func init() {
+	initialiseConfig()
+	models.InitialiseDatabase()
 }

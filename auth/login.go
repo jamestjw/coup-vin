@@ -18,7 +18,7 @@ type AccessTokenClaims struct {
 	jwt.StandardClaims
 }
 
-func GenerateTokenPair(u models.User) (map[string]string, error) {
+func GenerateTokenPair(u *models.User) (map[string]string, error) {
 	// Access Token
 	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &AccessTokenClaims{
@@ -26,7 +26,7 @@ func GenerateTokenPair(u models.User) (map[string]string, error) {
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),
-			Subject:   strconv.Itoa(u.ID),
+			Subject:   strconv.FormatUint(uint64(u.ID), 10),
 		},
 	}
 
@@ -41,7 +41,7 @@ func GenerateTokenPair(u models.User) (map[string]string, error) {
 
 	rtClaims := jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
-		Subject:   strconv.Itoa(u.ID),
+		Subject:   strconv.FormatUint(uint64(u.ID), 10),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	refreshTokenString, err := refreshToken.SignedString(jwtKey)

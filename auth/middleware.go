@@ -44,9 +44,9 @@ func Middleware(next http.Handler) http.Handler {
 					return
 				}
 
-				user, err := models.FindUserByID(id)
+				user := models.FindUserByID(id)
 
-				if err != nil {
+				if user == nil {
 					w.WriteHeader(http.StatusUnauthorized)
 					w.Write([]byte("Invalid Token"))
 					fmt.Print((err))
