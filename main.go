@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jamestjw/coup-vin/auth"
 	"github.com/jamestjw/coup-vin/middlewares"
@@ -14,6 +15,13 @@ import (
 
 func main() {
 	r := mux.NewRouter()
+
+	cors := handlers.CORS(
+		handlers.AllowedHeaders([]string{"content-type"}),
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowCredentials(),
+		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"}),
+	)
 
 	r.Handle("/", http.FileServer(http.Dir("./views/")))
 
@@ -34,7 +42,7 @@ func main() {
 	protectedRouter.HandleFunc("/rooms/{id}/messages", addMessageHandler).Methods("POST")
 
 	r.Use(middlewares.LoggingMiddleware)
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8080", cors(r))
 }
 
 var notImplemented = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

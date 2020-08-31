@@ -20,7 +20,7 @@ type AccessTokenClaims struct {
 
 func GenerateTokenPair(u *models.User) (map[string]string, error) {
 	// Access Token
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(1 * time.Minute)
 	claims := &AccessTokenClaims{
 		Username: u.Username,
 		StandardClaims: jwt.StandardClaims{
