@@ -54,7 +54,14 @@ var heartbeatHandler = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var roomsHandler = func(w http.ResponseWriter, r *http.Request) {
-	payload, _ := json.Marshal(models.DefaultRooms)
+	rooms, err := models.AllJoinableRooms()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	payload, _ := json.Marshal(rooms)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(payload))
@@ -62,7 +69,6 @@ var roomsHandler = func(w http.ResponseWriter, r *http.Request) {
 
 var addMessageHandler = func(w http.ResponseWriter, r *http.Request) {
 	// var message models.Message
-	var room models.Room
 	vars := mux.Vars(r)
 	roomID, err := strconv.Atoi(vars["id"])
 
@@ -71,14 +77,10 @@ var addMessageHandler = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, r := range models.DefaultRooms {
-		if r.ID == roomID {
-			room = r
-		}
-	}
+	room := models.FindRoomByID(roomID)
 
 	w.Header().Set("Content-Type", "application/json")
-	if room.ID != 0 {
+	if room != nil {
 		payload, _ := json.Marshal(room)
 		w.Write([]byte(payload))
 	} else {

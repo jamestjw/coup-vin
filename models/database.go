@@ -31,7 +31,7 @@ func InitialiseDatabase() {
 	}
 
 	// Migrate the schema
-	DB.AutoMigrate(&User{})
+	DB.AutoMigrate(&User{}, &Room{})
 
 	log.Info("Migrated DB schemas.")
 }

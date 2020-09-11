@@ -1,18 +1,33 @@
 package models
 
+import (
+	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+)
+
 type Room struct {
+	gorm.Model
 	Password string
 	MinUsers int
 	MaxUsers int
 	Name     string
-	ID       int
 }
 
-var DefaultRooms = []Room{
-	{Name: "World of Authcraft", MinUsers: 3, MaxUsers: 6, ID: 1},
-	{Name: "Ocean Explorer", MinUsers: 3, MaxUsers: 6, ID: 2},
-	{Name: "Dinosaur Park", MinUsers: 3, MaxUsers: 6, ID: 3},
-	{Name: "Cars VR", MinUsers: 3, MaxUsers: 6, ID: 4},
-	{Name: "Robin Hood", MinUsers: 3, MaxUsers: 6, ID: 5},
-	{Name: "Real World VR", MinUsers: 3, MaxUsers: 6, ID: 6},
+func AllJoinableRooms() (*[]Room, error) {
+	rooms := new([]Room)
+	result := DB.Find(rooms)
+	if result.Error != nil {
+		log.Error(result.Error)
+		return nil, result.Error
+	}
+	return rooms, nil
+}
+
+func FindRoomByID(id int) *Room {
+	room := Room{}
+	DB.First(&room, "id = ?", id)
+	if room == (Room{}) {
+		return nil
+	}
+	return &room
 }
