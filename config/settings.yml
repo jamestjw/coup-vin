@@ -1,3 +1,7 @@
 database:
-  # Sqlite file
-  directory: './config/coup.db'
+  production:
+    # Sqlite file
+    directory: 'config/coup_production.db'  
+  test:
+    # Sqlite file relative to test dir
+    directory: '../../config/coup_test.db'

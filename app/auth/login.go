@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/jamestjw/coup-vin/models"
+	"github.com/jamestjw/coup-vin/app/models"
 )
 
 // Create the JWT key used to create the signature
