@@ -1,17 +1,20 @@
 package models
 
 import (
-	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type Room struct {
-	gorm.Model
-	Password string
-	MinUsers int
-	MaxUsers int
-	Name     string
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Password  string         `json:"-"`
+	MinUsers  int            `json:"min_users"`
+	MaxUsers  int            `json:"max_users"`
+	Name      string         `json:"name"`
 }
 
 func (db *DB) AllJoinableRooms() ([]Room, error) {
@@ -29,8 +32,6 @@ func (db *DB) FindRoomByID(id uint) (*Room, error) {
 	if err != nil {
 		return &Room{}, err
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &Room{}, errors.New("Room Not Found")
-	}
+
 	return &room, err
 }

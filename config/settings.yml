@@ -4,4 +4,4 @@ database:
     directory: 'config/coup_production.db'  
   test:
     # Sqlite file relative to test dir
-    directory: '../../config/coup_test.db'
+    directory: '../config/coup_test.db'

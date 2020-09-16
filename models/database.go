@@ -12,6 +12,14 @@ import (
 )
 
 type Datastore interface {
+	AllJoinableRooms() ([]Room, error)
+	FindRoomByID(uint) (*Room, error)
+
+	// For user model
+	FindUserByUsername(string) (*User, error)
+	FindUserByID(uint) (*User, error)
+	UsernameExists(string) bool
+	CreateUser(string, string) (*User, error)
 }
 
 type DB struct {
@@ -35,8 +43,7 @@ func InitialiseDatabase(env string) (*DB, error) {
 	dbDirectoryKey := fmt.Sprintf("database.%s.directory", env)
 	dbDirectory := viper.GetString(dbDirectoryKey)
 
-	log.Info(dbDirectoryKey)
-	log.Info(fmt.Sprintf("Loading DB file from directory: %s for env: %s.", dbDirectory, env))
+	log.Info(fmt.Sprintf("Loading DB file from directory: %s for ENV: %s.", dbDirectory, env))
 
 	db, err := gorm.Open(sqlite.Open(dbDirectory), &gorm.Config{Logger: newLogger})
 	if err != nil {

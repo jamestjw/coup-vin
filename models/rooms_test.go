@@ -5,7 +5,6 @@ import (
 	"log"
 	"testing"
 
-	"github.com/jamestjw/coup-vin/app/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,23 +39,23 @@ func TestFindRoomByID(t *testing.T) {
 	}
 }
 
-func seedRooms() ([]*models.Room, error) {
-	err := refreshTable(&models.Room{})
+func seedRooms() ([]*Room, error) {
+	err := refreshTable(&Room{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	rooms := []*models.Room{
-		&models.Room{
+	rooms := []*Room{
+		&Room{
 			Name: "room_1",
 		},
-		&models.Room{
+		&Room{
 			Name: "room_2",
 		},
 	}
 
 	for _, room := range rooms {
-		err := db.Model(&models.Room{}).Create(room).Error
+		err := db.Model(&Room{}).Create(room).Error
 		if err != nil {
 			return nil, err
 		}

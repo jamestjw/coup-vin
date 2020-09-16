@@ -2,15 +2,19 @@ package models
 
 import (
 	"errors"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
-	Password string
-	Username string `gorm:"uniqueIndex"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Password  string         `json:"-"`
+	Username  string         `gorm:"uniqueIndex" json:"username"`
 }
 
 func (db *DB) FindUserByID(id uint) (*User, error) {
@@ -19,9 +23,7 @@ func (db *DB) FindUserByID(id uint) (*User, error) {
 	if err != nil {
 		return &User{}, err
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &User{}, errors.New("User Not Found")
-	}
+
 	return u, err
 }
 

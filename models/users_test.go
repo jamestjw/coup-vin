@@ -4,13 +4,12 @@ import (
 	"log"
 	"testing"
 
-	"github.com/jamestjw/coup-vin/app/models"
-	"github.com/jamestjw/coup-vin/app/utils"
+	"github.com/jamestjw/coup-vin/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFindUserByID(t *testing.T) {
-	err := refreshTable(&models.User{})
+	err := refreshTable(&User{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,7 +72,7 @@ func TestUsernameExists(t *testing.T) {
 }
 func TestCreateUser(t *testing.T) {
 
-	err := refreshTable(&models.User{})
+	err := refreshTable(&User{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,38 +92,38 @@ func TestCreateUser(t *testing.T) {
 
 // Helper functions for user test
 
-func seedOneUser() (models.User, error) {
+func seedOneUser() (User, error) {
 
-	refreshTable(&models.User{})
+	refreshTable(&User{})
 
-	user := models.User{
+	user := User{
 		Username: "test_username",
 		Password: "password",
 	}
 
-	err := db.Model(&models.User{}).Create(&user).Error
+	err := db.Model(&User{}).Create(&user).Error
 	if err != nil {
 		log.Fatalf("cannot seed users table: %v", err)
 	}
 	return user, nil
 }
 
-func seedUsers() ([]*models.User, error) {
-	refreshTable(&models.User{})
+func seedUsers() ([]*User, error) {
+	refreshTable(&User{})
 
-	users := []*models.User{
-		&models.User{
+	users := []*User{
+		&User{
 			Username: "test_username1",
 			Password: "password",
 		},
-		&models.User{
+		&User{
 			Username: "test_username2",
 			Password: "password",
 		},
 	}
 
 	for _, user := range users {
-		err := db.Model(&models.User{}).Create(user).Error
+		err := db.Model(&User{}).Create(user).Error
 		if err != nil {
 			return users, err
 		}
