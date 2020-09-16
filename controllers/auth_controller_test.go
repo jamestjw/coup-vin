@@ -1,70 +1,79 @@
 package controllers
 
-// func seedOneUser(username string, password string) (*models.User, error) {
+import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	err := refreshTable(&models.User{})
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	"github.com/golang/mock/gomock"
+	mock_database "github.com/jamestjw/coup-vin/mocks/mock_database"
+	"github.com/jamestjw/coup-vin/models"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
+)
 
-// 	user, err := server.DB.CreateUser(username, password)
-// 	return user, err
-// }
+func TestSignin(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-// func refreshTable(table interface{}) error {
-// 	// TODO: Consider just wiping table instead of dropping and re-creating
-// 	err := server.DB.Migrator().DropTable(table)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = server.DB.AutoMigrate(table)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	log.Printf("Successfully refreshed table")
-// 	return nil
-// }
+	expectedUsername := "testUsername"
+	expectedPassword := "password"
 
-// func TestSigninHandler(t *testing.T) {
-// 	username := "testUsername"
-// 	password := "password"
+	encrypedPassword, err := bcrypt.GenerateFromPassword([]byte(expectedPassword), 10)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	user, err := seedOneUser(username, password)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	expectedUser := &models.User{
+		Username: expectedUsername,
+		Password: string(encrypedPassword),
+	}
 
-// 	examples := []struct {
-// 		inputJSON  string
-// 		statusCode int
-// 	}{
-// 		{
-// 			inputJSON:  `{"username": "testUsername", "password": "password"}`,
-// 			statusCode: 200,
-// 		},
-// 		{
-// 			inputJSON:  `{"username": "testUsername", "password": "wrong password"}`,
-// 			statusCode: 401,
-// 		},
-// 		{
-// 			inputJSON:  `{"username": "wrong username", "password": "password"}`,
-// 			statusCode: 401,
-// 		},
-// 	}
+	examples := []struct {
+		inputUsername string
+		inputJSON     string
+		statusCode    int
+	}{
+		{
+			inputUsername: "testUsername",
+			inputJSON:     `{"username": "testUsername", "password": "password"}`,
+			statusCode:    200,
+		},
+		{
+			inputUsername: "testUsername",
+			inputJSON:     `{"username": "testUsername", "password": "wrong password"}`,
+			statusCode:    401,
+		},
+		{
+			inputUsername: "wrong username",
+			inputJSON:     `{"username": "wrong username", "password": "password"}`,
+			statusCode:    401,
+		},
+	}
 
-// 	for _, v := range examples {
-// 		req, err := http.NewRequest("POST", "/auth/signin", bytes.NewBufferString(v.inputJSON))
-// 		if err != nil {
-// 			t.Errorf("request failed with error: %v", err)
-// 		}
+	for _, example := range examples {
+		mockDatabase := mock_database.NewMockDatastore(ctrl)
+		if example.inputUsername == expectedUsername {
+			mockDatabase.EXPECT().FindUserByUsername(example.inputUsername).Return(expectedUser, nil)
+		} else {
+			mockDatabase.EXPECT().FindUserByUsername(example.inputUsername).Return(&models.User{}, nil)
+		}
+		server.DB = mockDatabase
 
-// 		rr := httptest.NewRecorder()
-// 		handler := http.HandlerFunc(server.Signin)
-// 		handler.ServeHTTP(rr, req)
+		req, err := http.NewRequest("POST", "/auth/signin", bytes.NewBufferString(example.inputJSON))
+		if err != nil {
+			t.Errorf("request failed with error: %v", err)
+		}
 
-// 		assert.Equal(t, rr.Code, v.statusCode)
-// 		if v.statusCode == 200 {
-// 			assert.NotEqual(t, rr.Body.String(), "")
-// 		}
-// 	}
-// }
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(server.Signin)
+		handler.ServeHTTP(rr, req)
+
+		assert.Equal(t, rr.Code, example.statusCode)
+		if example.statusCode == 200 {
+			assert.NotEqual(t, rr.Body.String(), "")
+		}
+	}
+}
