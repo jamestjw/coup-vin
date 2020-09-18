@@ -1,18 +1,37 @@
 package models
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 type Room struct {
-	Password string
-	MinUsers int
-	MaxUsers int
-	Name     string
-	ID       int
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Password  string         `json:"-"`
+	MinUsers  int            `json:"min_users"`
+	MaxUsers  int            `json:"max_users"`
+	Name      string         `json:"name"`
 }
 
-var DefaultRooms = []Room{
-	{Name: "World of Authcraft", MinUsers: 3, MaxUsers: 6, ID: 1},
-	{Name: "Ocean Explorer", MinUsers: 3, MaxUsers: 6, ID: 2},
-	{Name: "Dinosaur Park", MinUsers: 3, MaxUsers: 6, ID: 3},
-	{Name: "Cars VR", MinUsers: 3, MaxUsers: 6, ID: 4},
-	{Name: "Robin Hood", MinUsers: 3, MaxUsers: 6, ID: 5},
-	{Name: "Real World VR", MinUsers: 3, MaxUsers: 6, ID: 6},
+func (db *DB) AllJoinableRooms() ([]Room, error) {
+	rooms := new([]Room)
+	err := db.Find(rooms).Error
+	if err != nil {
+		return []Room{}, err
+	}
+	return *rooms, nil
+}
+
+func (db *DB) FindRoomByID(id uint) (*Room, error) {
+	room := Room{}
+	err := db.First(&room, "id = ?", id).Error
+	if err != nil {
+		return &Room{}, err
+	}
+
+	return &room, err
 }

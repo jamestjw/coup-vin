@@ -1,0 +1,8 @@
+# Binaries, plugins, libs
+*.dll
+*.dylib
+*.exe
+*.so
+
+# Sqlite DB file
+*.db

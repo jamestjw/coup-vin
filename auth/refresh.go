@@ -8,7 +8,7 @@ import (
 	"github.com/jamestjw/coup-vin/models"
 )
 
-func RefreshToken(refreshToken string) (map[string]string, error) {
+func RefreshToken(refreshToken string, db models.Datastore) (map[string]string, error) {
 	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
 		// Validate the alg is what we expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -27,9 +27,9 @@ func RefreshToken(refreshToken string) (map[string]string, error) {
 			return nil, err
 		}
 
-		user := models.FindUserByID(id)
+		user, err := db.FindUserByID(uint(id))
 
-		if user == nil {
+		if err != nil {
 			return nil, fmt.Errorf("refresh_token is invalid")
 		}
 		newTokenPair, err := GenerateTokenPair(user)

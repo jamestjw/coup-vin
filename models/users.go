@@ -1,44 +1,50 @@
 package models
 
 import (
+	"errors"
+	"time"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
-	Password string
-	Username string `gorm:"uniqueIndex"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Password  string         `json:"-"`
+	Username  string         `gorm:"uniqueIndex" json:"username"`
 }
 
-var DefaultUsers = []User{
-	{Username: "john_doe", Password: "notasecret"},
-}
-
-func FindUserByID(id int) *User {
-	user := User{}
-	DB.First(&user, "id = ?", id)
-	if user == (User{}) {
-		return nil
+func (db *DB) FindUserByID(id uint) (*User, error) {
+	u := &User{}
+	err := db.First(u, "id = ?", id).Error
+	if err != nil {
+		return &User{}, err
 	}
-	return &user
+
+	return u, err
 }
 
-func FindUserByUsername(username string) *User {
-	user := User{}
-	DB.First(&user, "username = ?", username)
-	if user == (User{}) {
-		return nil
+func (db *DB) FindUserByUsername(username string) (*User, error) {
+	u := &User{}
+	err := db.First(u, "username = ?", username).Error
+	if err != nil {
+		return &User{}, err
 	}
-	return &user
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return &User{}, errors.New("User Not Found")
+	}
+	return u, err
 }
 
-func UsernameExists(username string) (exists bool) {
-	user := FindUserByUsername(username)
-	return user != nil
+func (db *DB) UsernameExists(username string) (exists bool) {
+	_, err := db.FindUserByUsername(username)
+	return err == nil
 }
 
-func CreateUser(username string, password string) (*User, error) {
+func (db *DB) CreateUser(username string, password string) (*User, error) {
 	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 
 	if err != nil {
@@ -50,8 +56,8 @@ func CreateUser(username string, password string) (*User, error) {
 		Password: string(encryptedPassword),
 	}
 
-	res := DB.Create(user)
-	err = res.Error
+	err = db.Save(user).Error
+
 	return user, err
 }
 

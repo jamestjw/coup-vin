@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -10,9 +11,24 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
+type Datastore interface {
+	AllJoinableRooms() ([]Room, error)
+	FindRoomByID(uint) (*Room, error)
 
-func InitialiseDatabase() {
+	// For user model
+	FindUserByUsername(string) (*User, error)
+	FindUserByID(uint) (*User, error)
+	UsernameExists(string) bool
+	CreateUser(string, string) (*User, error)
+}
+
+type DB struct {
+	*gorm.DB
+}
+
+// InitialiseDatabase creates a database connection based on env
+// env: production or test
+func InitialiseDatabase(env string) (*DB, error) {
 	newLogger := logger.New(
 		log.New(), // io writer
 		logger.Config{
@@ -24,14 +40,20 @@ func InitialiseDatabase() {
 
 	var err error
 
-	dbDirectory := viper.GetString("database.directory")
-	DB, err = gorm.Open(sqlite.Open(dbDirectory), &gorm.Config{Logger: newLogger})
+	dbDirectoryKey := fmt.Sprintf("database.%s.directory", env)
+	dbDirectory := viper.GetString(dbDirectoryKey)
+
+	log.Info(fmt.Sprintf("Loading DB file from directory: %s for ENV: %s.", dbDirectory, env))
+
+	db, err := gorm.Open(sqlite.Open(dbDirectory), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
 	// Migrate the schema
-	DB.AutoMigrate(&User{})
+	db.AutoMigrate(&User{}, &Room{})
 
-	log.Info("Migrated DB schemas.")
+	log.Info(fmt.Sprintf("Migrated DB schemas for %s env.", env))
+
+	return &DB{db}, nil
 }
