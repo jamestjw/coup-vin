@@ -9,8 +9,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.2 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.1
-	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
-	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect
+	golang.org/x/crypto v0.31.0
 	gorm.io/driver/sqlite v1.1.0
 	gorm.io/gorm v1.9.19
 )
